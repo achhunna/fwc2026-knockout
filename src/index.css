@@ -1,0 +1,21 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+:root {
+  --bg: #f4ece8;
+  --bg-flag: #f4ece8;
+}
+
+html {
+  min-width: 770px;
+}
+
+body {
+  margin: 0;
+  min-height: 100svh;
+  color: #111;
+  background-color: var(--bg);
+}

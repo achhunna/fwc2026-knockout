@@ -1,0 +1,306 @@
+.circle-points {
+  --connector-color: #c8c8c8;
+  position: relative;
+  width: min(calc(100% - 64px), min(calc(100vh - 120px), 900px));
+  aspect-ratio: 1;
+  margin: 0 auto;
+}
+
+.circle-points__connector {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.circle-points__connector line,
+.circle-points__connector path {
+  stroke: var(--connector-color);
+  stroke-width: 0.15;
+  fill: none;
+}
+
+.circle-points__trophy {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  user-select: none;
+}
+
+.circle-points__trophy img {
+  width: 40px;
+  height: auto;
+  display: block;
+  mix-blend-mode: darken;
+}
+
+.circle-points__ring {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.circle-points__second-ring-dots {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  color: #111;
+}
+
+.circle-points__second-ring-dots circle {
+  fill: currentColor;
+  transition: color 0.4s ease;
+}
+
+.circle-points__ring--first {
+  z-index: 3;
+}
+
+.circle-points__ring--second {
+  z-index: 2;
+}
+
+.circle-points__ring--playable {
+  z-index: 4;
+}
+
+.circle-points__ring--playable-inner {
+  z-index: 5;
+}
+
+.circle-points__ring--playable-final {
+  z-index: 6;
+}
+
+.circle-points__ring--playable-championship {
+  z-index: 7;
+}
+
+.circle-points__path-measure {
+  position: absolute;
+  width: 0;
+  height: 0;
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.circle-points__pending-target-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.circle-points__pending-target-layer .circle-points__point--pending-target {
+  z-index: 0;
+  pointer-events: none;
+}
+
+.circle-points__traveling-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.circle-points__traveling-flag {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+  z-index: 11;
+  pointer-events: none;
+}
+
+.circle-points__point {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  transition: background-color 0.4s ease;
+}
+
+.circle-points__point--team {
+  width: 40px;
+  height: 40px;
+  display: block;
+  border-radius: 50%;
+  background: var(--bg-flag);
+  border: none;
+  overflow: visible;
+  z-index: 1;
+}
+
+.circle-points__point--first-slot {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  overflow: visible;
+  z-index: 9;
+}
+
+.circle-points__dot-marker {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+  transition:
+    background-color 0.4s ease,
+    opacity 0.4s ease;
+}
+
+.circle-points__ring--first .circle-points__flag-tooltip,
+.circle-points__flag-button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1;
+  width: 40px;
+  height: 40px;
+  mix-blend-mode: normal;
+}
+
+.circle-points__ring--first .circle-points__flag-tooltip .circle-points__flag {
+  position: static;
+  transform: none;
+}
+
+.circle-points__point--first-slot:has(.circle-points__flag-tooltip:hover),
+.circle-points__point--first-slot:has(.circle-points__flag-button:hover),
+.circle-points__point--first-slot:has(
+  .circle-points__flag-button:focus-visible
+) {
+  z-index: 20;
+}
+
+.circle-points__flag-button {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  margin: 0;
+  border: none;
+  background: var(--bg-flag);
+  border-radius: 50%;
+  cursor: pointer;
+  overflow: visible;
+}
+
+.circle-points__flag-button:disabled,
+button.circle-points__point:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+button.circle-points__point {
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+}
+
+.circle-points__point--selectable {
+  cursor: pointer;
+}
+
+.circle-points__second-ring-dots circle.circle-points__second-ring-dot--passed {
+  color: var(--connector-color);
+}
+
+.circle-points__second-ring-dots
+  circle.circle-points__second-ring-dot--advancing {
+  transition-delay: 0.35s;
+  color: var(--connector-color);
+}
+
+.circle-points__point--passed .circle-points__dot-marker,
+.circle-points__point--passed:not(.circle-points__point--first-slot):not(
+    .circle-points__point--team
+  ) {
+  background: var(--connector-color);
+}
+
+.circle-points__point--eliminated .circle-points__flag {
+  filter: sepia(1) saturate(0.7);
+  opacity: 0.4;
+}
+
+.circle-points__flag {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 50%;
+  display: block;
+  opacity: 1;
+}
+
+.circle-points__flag-tooltip {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.circle-points__tooltip {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(17, 17, 17, 0.92);
+  color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-size: 0.75rem;
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.15s ease,
+    visibility 0.15s ease;
+  z-index: 20;
+}
+
+.circle-points__flag-tooltip--right .circle-points__tooltip {
+  left: calc(100% + 0.5rem);
+}
+
+.circle-points__flag-tooltip--left .circle-points__tooltip {
+  right: calc(100% + 0.5rem);
+}
+
+.circle-points__flag-tooltip:hover .circle-points__tooltip,
+.circle-points__flag-tooltip:focus-within .circle-points__tooltip,
+.circle-points__flag-button:hover .circle-points__tooltip,
+.circle-points__flag-button:focus-visible .circle-points__tooltip,
+.circle-points__point--first-slot:hover .circle-points__tooltip,
+button.circle-points__point:hover .circle-points__tooltip,
+button.circle-points__point:focus-visible .circle-points__tooltip {
+  opacity: 1;
+  visibility: visible;
+}

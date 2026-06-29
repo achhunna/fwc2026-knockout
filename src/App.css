@@ -1,0 +1,244 @@
+.app {
+  display: flex;
+  min-height: 100svh;
+}
+
+.app-sidebar {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  width: min(18rem, 32vw);
+  padding: 2rem 1.75rem;
+}
+
+.app-sidebar__title {
+  margin: 0 0 1rem;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-size: 1.375rem;
+  font-weight: 650;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+}
+
+.app-sidebar__text {
+  margin: 0;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: #444;
+}
+
+.app-sidebar__actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.25rem;
+}
+
+.app-action-btn {
+  padding: 0.4375rem 0.75rem;
+  border: none;
+  border-radius: 0.25rem;
+  background: #222;
+  color: #fff;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.app-action-btn:hover:not(:disabled) {
+  background: #333;
+}
+
+.app-action-btn:disabled {
+  background: #bbb;
+  color: #fff;
+  cursor: not-allowed;
+}
+
+.app-share-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  background: rgb(0 0 0 / 0.35);
+}
+
+.app-share-modal__panel {
+  width: min(100%, 24rem);
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  background: #fff;
+  box-shadow: 0 12px 40px rgb(0 0 0 / 0.15);
+}
+
+.app-share-modal__title {
+  margin: 0 0 0.75rem;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111;
+}
+
+.app-share-modal__link {
+  margin: 0 0 1.25rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: 0.25rem;
+  background: #f5f5f5;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #333;
+  word-break: break-all;
+}
+
+.app-sidebar__debug {
+  margin-top: 2rem;
+  padding: 0.875rem 1rem;
+  border: 1px dashed #bbb;
+  border-radius: 0.375rem;
+  background: rgb(255 255 255 / 0.45);
+}
+
+.app-sidebar__debug-title {
+  margin: 0 0 0.75rem;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #666;
+}
+
+.app-sidebar__debug-help {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: #555;
+}
+
+.app-sidebar__debug-input {
+  display: block;
+  width: 100%;
+  min-height: 10rem;
+  margin: 0 0 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+  background: #fff;
+  font-family:
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace;
+  font-size: 0.6875rem;
+  line-height: 1.45;
+  color: #222;
+  resize: vertical;
+}
+
+.app-sidebar__debug-input:focus {
+  outline: 2px solid #888;
+  outline-offset: 1px;
+}
+
+.app-sidebar__debug-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.app-sidebar__debug-actions button {
+  padding: 0.375rem 0.625rem;
+  border: 1px solid #aaa;
+  border-radius: 0.25rem;
+  background: #f5f5f5;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.app-sidebar__debug-actions button:hover {
+  background: #ebebeb;
+}
+
+.app-sidebar__debug-message {
+  margin: 0.625rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: #333;
+}
+
+.app-main {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  padding: 2rem 1.5rem;
+}
+
+@media (max-width: 1199px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .app-sidebar {
+    width: 100%;
+    padding: 1.5rem 1.5rem 0;
+  }
+
+  .app-main {
+    padding: 1.5rem;
+  }
+}
