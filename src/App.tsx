@@ -11,38 +11,53 @@ import type { Team } from "./lib/drawTree";
 import "./App.css";
 
 const TEAMS = [
-  { isoCode: "CAN", name: "Canada" },
-  { isoCode: "ZAF", name: "South Africa" },
   { isoCode: "BRA", name: "Brazil" },
   { isoCode: "JPN", name: "Japan" },
-  { isoCode: "DEU", name: "Germany" },
-  { isoCode: "PRY", name: "Paraguay" },
-  { isoCode: "NLD", name: "Netherlands" },
-  { isoCode: "MAR", name: "Morocco" },
+
   { isoCode: "CIV", name: "Côte d'Ivoire" },
   { isoCode: "NOR", name: "Norway" },
-  { isoCode: "FRA", name: "France" },
-  { isoCode: "SWE", name: "Sweden" },
+
   { isoCode: "MEX", name: "Mexico" },
   { isoCode: "ECU", name: "Ecuador" },
+
   { isoCode: "GB-ENG", name: "England" },
   { isoCode: "COD", name: "DR Congo" },
-  { isoCode: "BEL", name: "Belgium" },
-  { isoCode: "SEN", name: "Senegal" },
-  { isoCode: "USA", name: "United States" },
-  { isoCode: "BIH", name: "Bosnia and Herzegovina" },
-  { isoCode: "ESP", name: "Spain" },
-  { isoCode: "AUT", name: "Austria" },
-  { isoCode: "PRT", name: "Portugal" },
-  { isoCode: "HRV", name: "Croatia" },
-  { isoCode: "CHE", name: "Switzerland" },
-  { isoCode: "DZA", name: "Algeria" },
-  { isoCode: "AUS", name: "Australia" },
-  { isoCode: "EGY", name: "Egypt" },
+
   { isoCode: "ARG", name: "Argentina" },
   { isoCode: "CPV", name: "Cape Verde" },
+
+  { isoCode: "AUS", name: "Australia" },
+  { isoCode: "EGY", name: "Egypt" },
+
+  { isoCode: "CHE", name: "Switzerland" },
+  { isoCode: "DZA", name: "Algeria" },
+
   { isoCode: "COL", name: "Colombia" },
   { isoCode: "GHA", name: "Ghana" },
+
+  { isoCode: "SEN", name: "Senegal" },
+  { isoCode: "BEL", name: "Belgium" },
+
+  { isoCode: "USA", name: "United States" },
+  { isoCode: "BIH", name: "Bosnia and Herzegovina" },
+
+  { isoCode: "ESP", name: "Spain" },
+  { isoCode: "AUT", name: "Austria" },
+
+  { isoCode: "PRT", name: "Portugal" },
+  { isoCode: "HRV", name: "Croatia" },
+
+  { isoCode: "NLD", name: "Netherlands" },
+  { isoCode: "MAR", name: "Morocco" },
+
+  { isoCode: "CAN", name: "Canada" },
+  { isoCode: "ZAF", name: "South Africa" },
+
+  { isoCode: "FRA", name: "France" },
+  { isoCode: "SWE", name: "Sweden" },
+
+  { isoCode: "DEU", name: "Germany" },
+  { isoCode: "PRY", name: "Paraguay" },
 ] as const;
 
 const DRAW_POSITIONS: DrawPosition[] = TEAMS.map((team, index) => {
