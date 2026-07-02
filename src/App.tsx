@@ -211,7 +211,7 @@ function App() {
   }, [debugDraft]);
 
   const handleReset = useCallback(() => {
-    setPairWinners({});
+    setPairWinners(shareId ? {} : getInitialPairWinners());
     basePairWinnersRef.current = {};
     setDrawKey((current) => current + 1);
     setDebugDraft("");
