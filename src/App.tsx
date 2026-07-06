@@ -32,6 +32,13 @@ type Teams = {
   fifa_code: string;
 };
 
+type Games = {
+  _id: string;
+  type: string;
+  home_team_name_en: string;
+  away_team_name_en: string;
+};
+
 export type AdvanceMove = {
   id: string;
   team: Team;
@@ -136,21 +143,49 @@ function App() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(`${WORLD_CUP_26_BASE_PATH}/get/teams`);
+        const [teamsResponse, gamesResponse] = await Promise.all([
+          fetch(`${WORLD_CUP_26_BASE_PATH}/get/teams`),
+          fetch(`${WORLD_CUP_26_BASE_PATH}/get/games`),
+        ]);
 
-        if (!response.ok) {
+        if (!teamsResponse.ok || !gamesResponse.ok) {
           console.error("Error fetching data");
           return;
         }
 
-        const data = await response.json();
+        const [teamsData, gamesData] = await Promise.all([
+          teamsResponse.json(),
+          gamesResponse.json(),
+        ]);
 
-        const teams = data.teams.map(({ fifa_code, name_en }: Teams) => ({
-          isoCode: fifa_code,
-          name: name_en,
-        }));
+        const teamsMap = teamsData.teams.reduce(
+          (acc: { [key: string]: string }, { fifa_code, name_en }: Teams) => {
+            acc[name_en] = fifa_code;
+            return acc;
+          },
+          {},
+        );
 
-        drawPositionsRef.current = teams.map(
+        // r32 filter
+        const r32GameTeams = gamesData?.games
+          .filter(({ type }: Games) => type === "r32")
+          .reduce(
+            (acc: any, { home_team_name_en, away_team_name_en }: Games) => {
+              acc.push({
+                isoCode: teamsMap[home_team_name_en],
+                name: home_team_name_en,
+              });
+              acc.push({
+                isoCode: teamsMap[away_team_name_en],
+                name: away_team_name_en,
+              });
+              return acc;
+            },
+            [],
+          );
+        console.log({ r32GameTeams });
+
+        drawPositionsRef.current = r32GameTeams.map(
           (team: { isoCode: string; name: string }, index: number) => {
             const position = index + 1;
 
