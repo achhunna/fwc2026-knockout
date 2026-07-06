@@ -4,7 +4,11 @@ import {
   type DrawPosition,
   type Point,
 } from "./components/CirclePoints";
-import { parseDrawState, serializeDrawState } from "./lib/drawState";
+import {
+  parseDrawState,
+  serializeDrawState,
+  type DrawState,
+} from "./lib/drawState";
 import {
   getShareIdFromUrl,
   loadDrawState,
@@ -19,6 +23,14 @@ import {
   type Team,
 } from "./lib/drawTree";
 import "./App.css";
+
+const WORLD_CUP_26_BASE_PATH = "https://worldcup26.ir";
+
+type Teams = {
+  _id: string;
+  name_en: string;
+  fifa_code: string;
+};
 
 export type AdvanceMove = {
   id: string;
@@ -79,22 +91,11 @@ const TEAMS = [
   { isoCode: "PRY", name: "Paraguay" },
 ] as const;
 
-const DRAW_POSITIONS: DrawPosition[] = TEAMS.map((team, index) => {
-  const position = index + 1;
-
-  return {
-    position,
-    pair: Math.ceil(position / 2),
-    isoCode: team.isoCode,
-    team: team.name,
-  };
-});
-
-function getInitialPairWinners(): Record<string, Team> {
-  const result = parseDrawState(
-    JSON.stringify(DEFAULT_DRAW_STATE),
-    DRAW_POSITIONS,
-  );
+function getInitialPairWinners(
+  state: DrawState,
+  positions: DrawPosition[] | null,
+): Record<string, Team> {
+  const result = parseDrawState(JSON.stringify(state), positions);
 
   if ("error" in result) {
     throw new Error(result.error);
@@ -110,9 +111,7 @@ function isDebugEnabled(): boolean {
 function App() {
   const showDebugPanel = isDebugEnabled();
   const shareId = getShareIdFromUrl();
-  const [pairWinners, setPairWinners] = useState(() =>
-    shareId ? {} : getInitialPairWinners(),
-  );
+  const [pairWinners, setPairWinners] = useState({});
   const [drawKey, setDrawKey] = useState(0);
   const [debugDraft, setDebugDraft] = useState("");
   const [debugMessage, setDebugMessage] = useState<string | null>(null);
@@ -127,13 +126,54 @@ function App() {
     null,
   );
   const moveHistoryRef = useRef<AdvanceMove[]>([]);
-  const basePairWinnersRef = useRef<Record<string, Team>>(
-    getInitialPairWinners(),
-  );
+  const basePairWinnersRef = useRef<Record<string, Team> | null>(null);
+  const drawPositionsRef = useRef<DrawPosition[] | null>(null);
 
-  const hasChanges = Object.keys(pairWinners).length > 0;
+  const hasChanges = pairWinners ? Object.keys(pairWinners).length > 0 : false;
   const canUndo = Boolean(moveHistoryRef.current.length > 0);
   const isUndoAnimating = activeUndoMove !== null;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${WORLD_CUP_26_BASE_PATH}/get/teams`);
+
+        if (!response.ok) {
+          console.error("Error fetching data");
+          return;
+        }
+
+        const data = await response.json();
+
+        const teams = data.teams.map(({ fifa_code, name_en }: Teams) => ({
+          isoCode: fifa_code,
+          name: name_en,
+        }));
+
+        drawPositionsRef.current = teams.map(
+          (team: { isoCode: string; name: string }, index: number) => {
+            const position = index + 1;
+
+            return {
+              position,
+              pair: Math.ceil(position / 2),
+              isoCode: team.isoCode,
+              team: team.name,
+            };
+          },
+        );
+
+        basePairWinnersRef.current = getInitialPairWinners(
+          DEFAULT_DRAW_STATE,
+          drawPositionsRef.current,
+        );
+        setPairWinners(shareId ? {} : basePairWinnersRef.current);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchData();
+  }, []);
 
   useEffect(() => {
     if (!shareId) {
@@ -145,7 +185,7 @@ function App() {
     void (async () => {
       try {
         const json = await loadDrawState(shareId);
-        const result = parseDrawState(json, DRAW_POSITIONS);
+        const result = parseDrawState(json, drawPositionsRef.current);
 
         if (cancelled) {
           return;
@@ -182,7 +222,7 @@ function App() {
   }, [shareId]);
 
   const handleCopyState = useCallback(async () => {
-    const serialized = serializeDrawState(pairWinners);
+    const serialized = pairWinners ? serializeDrawState(pairWinners) : "";
     setDebugDraft(serialized);
     setDebugMessage(null);
 
@@ -195,7 +235,7 @@ function App() {
   }, [pairWinners]);
 
   const handleLoadState = useCallback(() => {
-    const result = parseDrawState(debugDraft, DRAW_POSITIONS);
+    const result = parseDrawState(debugDraft, drawPositionsRef.current);
 
     if ("error" in result) {
       setDebugMessage(result.error);
@@ -211,7 +251,13 @@ function App() {
   }, [debugDraft]);
 
   const handleReset = useCallback(() => {
-    setPairWinners(shareId ? {} : getInitialPairWinners());
+    setPairWinners(
+      shareId
+        ? {}
+        : basePairWinnersRef.current
+          ? basePairWinnersRef.current
+          : {},
+    );
     basePairWinnersRef.current = {};
     setDrawKey((current) => current + 1);
     setDebugDraft("");
@@ -286,7 +332,7 @@ function App() {
       }
 
       return selectPairWinner(
-        DRAW_POSITIONS,
+        drawPositionsRef.current,
         current,
         ringIndex as PlayableRing,
         getPairIndex(slotIndex),
@@ -294,7 +340,7 @@ function App() {
       );
     }, basePairWinnersRef.current);
 
-    setPairWinners(nextState);
+    setPairWinners(nextState ?? {});
     setActiveUndoMove(null);
   }, [activeUndoMove]);
 
@@ -405,11 +451,6 @@ function App() {
             ) : null}
           </section>
         )}
-        <p className="app-sidebar__footer" style={{ opacity: 0.66 }}>
-          <a href="https://x.com/paul__ux" style={{ textDecoration: "none" }}>
-            @paul__ux
-          </a>
-        </p>
       </aside>
       <div className="app-main">
         {isLoadingShare ? (
@@ -419,7 +460,7 @@ function App() {
         ) : (
           <CirclePoints
             key={drawKey}
-            positions={DRAW_POSITIONS}
+            positions={drawPositionsRef.current}
             pairWinners={pairWinners}
             onPairWinnersChange={setPairWinners}
             onMoveCreated={handleMoveCreated}
