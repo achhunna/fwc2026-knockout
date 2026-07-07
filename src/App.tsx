@@ -10,7 +10,7 @@ import {
   loadDrawState,
   uploadDrawState,
 } from "./lib/shareDraw";
-import { DEFAULT_DRAW_STATE } from "./lib/default-state";
+import { fetchLiveDrawState } from "./lib/live-draw-state";
 import {
   getPairIndex,
   isPlayableRing,
@@ -29,80 +29,6 @@ export type AdvanceMove = {
   targetSlotKey: string;
 };
 
-const TEAMS = [
-  { isoCode: "BRA", name: "Brazil" },
-  { isoCode: "JPN", name: "Japan" },
-
-  { isoCode: "CIV", name: "Côte d'Ivoire" },
-  { isoCode: "NOR", name: "Norway" },
-
-  { isoCode: "MEX", name: "Mexico" },
-  { isoCode: "ECU", name: "Ecuador" },
-
-  { isoCode: "GB-ENG", name: "England" },
-  { isoCode: "COD", name: "DR Congo" },
-
-  { isoCode: "ARG", name: "Argentina" },
-  { isoCode: "CPV", name: "Cape Verde" },
-
-  { isoCode: "AUS", name: "Australia" },
-  { isoCode: "EGY", name: "Egypt" },
-
-  { isoCode: "CHE", name: "Switzerland" },
-  { isoCode: "DZA", name: "Algeria" },
-
-  { isoCode: "COL", name: "Colombia" },
-  { isoCode: "GHA", name: "Ghana" },
-
-  { isoCode: "SEN", name: "Senegal" },
-  { isoCode: "BEL", name: "Belgium" },
-
-  { isoCode: "USA", name: "United States" },
-  { isoCode: "BIH", name: "Bosnia and Herzegovina" },
-
-  { isoCode: "ESP", name: "Spain" },
-  { isoCode: "AUT", name: "Austria" },
-
-  { isoCode: "PRT", name: "Portugal" },
-  { isoCode: "HRV", name: "Croatia" },
-
-  { isoCode: "NLD", name: "Netherlands" },
-  { isoCode: "MAR", name: "Morocco" },
-
-  { isoCode: "CAN", name: "Canada" },
-  { isoCode: "ZAF", name: "South Africa" },
-
-  { isoCode: "FRA", name: "France" },
-  { isoCode: "SWE", name: "Sweden" },
-
-  { isoCode: "DEU", name: "Germany" },
-  { isoCode: "PRY", name: "Paraguay" },
-] as const;
-
-const DRAW_POSITIONS: DrawPosition[] = TEAMS.map((team, index) => {
-  const position = index + 1;
-
-  return {
-    position,
-    pair: Math.ceil(position / 2),
-    isoCode: team.isoCode,
-    team: team.name,
-  };
-});
-
-function getInitialPairWinners(): Record<string, Team> {
-  const result = parseDrawState(
-    JSON.stringify(DEFAULT_DRAW_STATE),
-    DRAW_POSITIONS,
-  );
-
-  if ("error" in result) {
-    throw new Error(result.error);
-  }
-
-  return result.pairWinners;
-}
-
 function isDebugEnabled(): boolean {
   return new URLSearchParams(window.location.search).get("debug") === "1";
 }
@@ -110,9 +36,7 @@ function isDebugEnabled(): boolean {
 function App() {
   const showDebugPanel = isDebugEnabled();
   const shareId = getShareIdFromUrl();
-  const [pairWinners, setPairWinners] = useState(() =>
-    shareId ? {} : getInitialPairWinners(),
-  );
+  const [pairWinners, setPairWinners] = useState({});
   const [drawKey, setDrawKey] = useState(0);
   const [debugDraft, setDebugDraft] = useState("");
   const [debugMessage, setDebugMessage] = useState<string | null>(null);
@@ -127,13 +51,33 @@ function App() {
     null,
   );
   const moveHistoryRef = useRef<AdvanceMove[]>([]);
-  const basePairWinnersRef = useRef<Record<string, Team>>(
-    getInitialPairWinners(),
-  );
+  const basePairWinnersRef = useRef<Record<string, Team> | null>(null);
+  const drawPositionsRef = useRef<DrawPosition[] | null>(null);
 
-  const hasChanges = Object.keys(pairWinners).length > 0;
+  const hasChanges = pairWinners ? Object.keys(pairWinners).length > 0 : false;
   const canUndo = Boolean(moveHistoryRef.current.length > 0);
   const isUndoAnimating = activeUndoMove !== null;
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const { state, positions } = await fetchLiveDrawState();
+        drawPositionsRef.current = positions;
+        const result = parseDrawState(JSON.stringify(state), positions);
+
+        if ("error" in result) {
+          console.error(result.error);
+          return;
+        }
+
+        basePairWinnersRef.current = result.pairWinners;
+        setPairWinners(shareId ? {} : basePairWinnersRef.current);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchData();
+  }, [shareId]);
 
   useEffect(() => {
     if (!shareId) {
@@ -145,7 +89,7 @@ function App() {
     void (async () => {
       try {
         const json = await loadDrawState(shareId);
-        const result = parseDrawState(json, DRAW_POSITIONS);
+        const result = parseDrawState(json, drawPositionsRef.current);
 
         if (cancelled) {
           return;
@@ -182,7 +126,7 @@ function App() {
   }, [shareId]);
 
   const handleCopyState = useCallback(async () => {
-    const serialized = serializeDrawState(pairWinners);
+    const serialized = pairWinners ? serializeDrawState(pairWinners) : "";
     setDebugDraft(serialized);
     setDebugMessage(null);
 
@@ -195,7 +139,7 @@ function App() {
   }, [pairWinners]);
 
   const handleLoadState = useCallback(() => {
-    const result = parseDrawState(debugDraft, DRAW_POSITIONS);
+    const result = parseDrawState(debugDraft, drawPositionsRef.current);
 
     if ("error" in result) {
       setDebugMessage(result.error);
@@ -211,7 +155,13 @@ function App() {
   }, [debugDraft]);
 
   const handleReset = useCallback(() => {
-    setPairWinners(shareId ? {} : getInitialPairWinners());
+    setPairWinners(
+      shareId
+        ? {}
+        : basePairWinnersRef.current
+          ? basePairWinnersRef.current
+          : {},
+    );
     basePairWinnersRef.current = {};
     setDrawKey((current) => current + 1);
     setDebugDraft("");
@@ -286,7 +236,7 @@ function App() {
       }
 
       return selectPairWinner(
-        DRAW_POSITIONS,
+        drawPositionsRef.current,
         current,
         ringIndex as PlayableRing,
         getPairIndex(slotIndex),
@@ -294,7 +244,7 @@ function App() {
       );
     }, basePairWinnersRef.current);
 
-    setPairWinners(nextState);
+    setPairWinners(nextState ?? {});
     setActiveUndoMove(null);
   }, [activeUndoMove]);
 
@@ -405,11 +355,6 @@ function App() {
             ) : null}
           </section>
         )}
-        <p className="app-sidebar__footer" style={{ opacity: 0.66 }}>
-          <a href="https://x.com/paul__ux" style={{ textDecoration: "none" }}>
-            @paul__ux
-          </a>
-        </p>
       </aside>
       <div className="app-main">
         {isLoadingShare ? (
@@ -419,7 +364,7 @@ function App() {
         ) : (
           <CirclePoints
             key={drawKey}
-            positions={DRAW_POSITIONS}
+            positions={drawPositionsRef.current}
             pairWinners={pairWinners}
             onPairWinnersChange={setPairWinners}
             onMoveCreated={handleMoveCreated}

@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "vercel-link": "vercel link",
+    "vercel-pull": "vercel env pull .env.local",
+    "vercel-dev": "vercel dev -l 5173"
   },
   "dependencies": {
     "@vercel/blob": "^2.5.0",

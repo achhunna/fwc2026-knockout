@@ -1,8 +1,4 @@
-import {
-  prunePairWinners,
-  type DrawPosition,
-  type Team,
-} from "./drawTree";
+import { prunePairWinners, type DrawPosition, type Team } from "./drawTree";
 
 export type DrawState = {
   v: 1;
@@ -10,10 +6,10 @@ export type DrawState = {
 };
 
 function teamByIsoCode(
-  positions: DrawPosition[],
+  positions: DrawPosition[] | null,
   isoCode: string,
 ): Team | null {
-  const position = positions.find((entry) => entry.isoCode === isoCode);
+  const position = positions?.find((entry) => entry.isoCode === isoCode);
   if (!position) {
     return null;
   }
@@ -24,9 +20,7 @@ function teamByIsoCode(
   };
 }
 
-export function serializeDrawState(
-  pairWinners: Record<string, Team>,
-): string {
+export function serializeDrawState(pairWinners: Record<string, Team>): string {
   const winners: Record<string, string> = {};
 
   for (const [key, team] of Object.entries(pairWinners)) {
@@ -39,7 +33,7 @@ export function serializeDrawState(
 
 export function parseDrawState(
   raw: string,
-  positions: DrawPosition[],
+  positions: DrawPosition[] | null,
 ): { pairWinners: Record<string, Team> } | { error: string } {
   let parsed: unknown;
 

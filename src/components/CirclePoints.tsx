@@ -37,7 +37,7 @@ const RING_RADII = [50, 40.5, 31, 22, 13.5, 5.5] as const;
 const OUTER_RING_DIAMETER_EXPANSION_PX = 8;
 
 type CirclePointsProps = {
-  positions: DrawPosition[];
+  positions: DrawPosition[] | null;
   pairWinners: Record<string, Team>;
   onPairWinnersChange: (pairWinners: Record<string, Team>) => void;
   onMoveCreated: (move: AdvanceMove) => void;

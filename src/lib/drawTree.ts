@@ -1,15 +1,15 @@
 export type DrawPosition = {
-  position: number
-  pair: number
-  isoCode: string
-  team: string | null
-}
+  position: number;
+  pair: number;
+  isoCode: string;
+  team: string | null;
+};
 
-export const RING_COUNTS = [32, 32, 16, 8, 4, 2] as const
+export const RING_COUNTS = [32, 32, 16, 8, 4, 2] as const;
 
-export const PLAYABLE_RINGS = [0, 2, 3, 4, 5] as const
+export const PLAYABLE_RINGS = [0, 2, 3, 4, 5] as const;
 
-export type PlayableRing = (typeof PLAYABLE_RINGS)[number]
+export type PlayableRing = (typeof PLAYABLE_RINGS)[number];
 
 export const NEXT_RING: Record<PlayableRing, number | null> = {
   0: 2,
@@ -17,142 +17,147 @@ export const NEXT_RING: Record<PlayableRing, number | null> = {
   3: 4,
   4: 5,
   5: null,
-}
+};
 
 export type Team = {
-  isoCode: string
-  name: string
-}
+  isoCode: string;
+  name: string;
+};
 
 export function slotKey(ringIndex: number, slotIndex: number): string {
-  return `${ringIndex}-${slotIndex}`
+  return `${ringIndex}-${slotIndex}`;
 }
 
 export function pairKey(ringIndex: number, pairIndex: number): string {
-  return `${ringIndex}-pair-${pairIndex}`
+  return `${ringIndex}-pair-${pairIndex}`;
 }
 
-export function getPairIndices(_ringIndex: number, pairIndex: number): [number, number] {
-  return [pairIndex * 2, pairIndex * 2 + 1]
+export function getPairIndices(
+  _ringIndex: number,
+  pairIndex: number,
+): [number, number] {
+  return [pairIndex * 2, pairIndex * 2 + 1];
 }
 
 export function getPairCount(ringIndex: number): number {
-  return RING_COUNTS[ringIndex] / 2
+  return RING_COUNTS[ringIndex] / 2;
 }
 
 export function getPairIndex(slotIndex: number): number {
-  return Math.floor(slotIndex / 2)
+  return Math.floor(slotIndex / 2);
 }
 
 export function isPlayableRing(ringIndex: number): ringIndex is PlayableRing {
-  return PLAYABLE_RINGS.includes(ringIndex as PlayableRing)
+  return PLAYABLE_RINGS.includes(ringIndex as PlayableRing);
 }
 
 function teamFromPosition(position: DrawPosition): Team {
   return {
     isoCode: position.isoCode,
     name: position.team ?? position.isoCode,
-  }
+  };
 }
 
-export function createInitialSlotTeams(positions: DrawPosition[]): Record<string, Team> {
-  const slots: Record<string, Team> = {}
+export function createInitialSlotTeams(
+  positions: DrawPosition[] | null,
+): Record<string, Team> {
+  const slots: Record<string, Team> = {};
 
-  positions.forEach((position, index) => {
-    slots[slotKey(0, index)] = teamFromPosition(position)
-  })
+  positions?.forEach((position, index) => {
+    slots[slotKey(0, index)] = teamFromPosition(position);
+  });
 
-  return slots
+  return slots;
 }
 
 export function deriveSlotTeams(
-  positions: DrawPosition[],
+  positions: DrawPosition[] | null,
   pairWinners: Record<string, Team>,
 ): Record<string, Team> {
-  const slots = createInitialSlotTeams(positions)
+  const slots = createInitialSlotTeams(positions);
 
   for (const ringIndex of PLAYABLE_RINGS) {
-    const pairCount = getPairCount(ringIndex)
+    const pairCount = getPairCount(ringIndex);
 
     for (let pairIndex = 0; pairIndex < pairCount; pairIndex += 1) {
-      const winner = pairWinners[pairKey(ringIndex, pairIndex)]
+      const winner = pairWinners[pairKey(ringIndex, pairIndex)];
       if (!winner) {
-        continue
+        continue;
       }
 
-      const [slotA, slotB] = getPairIndices(ringIndex, pairIndex)
-      const teamA = slots[slotKey(ringIndex, slotA)]
-      const teamB = slots[slotKey(ringIndex, slotB)]
+      const [slotA, slotB] = getPairIndices(ringIndex, pairIndex);
+      const teamA = slots[slotKey(ringIndex, slotA)];
+      const teamB = slots[slotKey(ringIndex, slotB)];
 
       if (!teamA || !teamB) {
-        continue
+        continue;
       }
 
       const winnerInPair =
-        winner.isoCode === teamA.isoCode || winner.isoCode === teamB.isoCode
+        winner.isoCode === teamA.isoCode || winner.isoCode === teamB.isoCode;
 
       if (!winnerInPair) {
-        continue
+        continue;
       }
 
-      const nextRing = NEXT_RING[ringIndex]
+      const nextRing = NEXT_RING[ringIndex];
       if (nextRing === null) {
-        continue
+        continue;
       }
 
-      slots[slotKey(nextRing, pairIndex)] = winner
+      slots[slotKey(nextRing, pairIndex)] = winner;
     }
   }
 
-  return slots
+  return slots;
 }
 
 export function prunePairWinners(
-  positions: DrawPosition[],
+  positions: DrawPosition[] | null,
   pairWinners: Record<string, Team>,
 ): Record<string, Team> {
-  const slots = createInitialSlotTeams(positions)
-  const validWinners: Record<string, Team> = {}
+  const slots = createInitialSlotTeams(positions);
+  const validWinners: Record<string, Team> = {};
 
   for (const ringIndex of PLAYABLE_RINGS) {
-    const pairCount = getPairCount(ringIndex)
+    const pairCount = getPairCount(ringIndex);
 
     for (let pairIndex = 0; pairIndex < pairCount; pairIndex += 1) {
-      const winner = pairWinners[pairKey(ringIndex, pairIndex)]
+      const winner = pairWinners[pairKey(ringIndex, pairIndex)];
       if (!winner) {
-        continue
+        continue;
       }
 
-      const [slotA, slotB] = getPairIndices(ringIndex, pairIndex)
-      const teamA = slots[slotKey(ringIndex, slotA)]
-      const teamB = slots[slotKey(ringIndex, slotB)]
+      const [slotA, slotB] = getPairIndices(ringIndex, pairIndex);
+      const teamA = slots[slotKey(ringIndex, slotA)];
+      const teamB = slots[slotKey(ringIndex, slotB)];
 
       if (!teamA || !teamB) {
-        continue
+        continue;
       }
 
       const winnerInPair =
-        winner.isoCode === teamA.isoCode || winner.isoCode === teamB.isoCode
+        winner.isoCode === teamA.isoCode || winner.isoCode === teamB.isoCode;
 
       if (!winnerInPair) {
-        continue
+        continue;
       }
 
-      validWinners[pairKey(ringIndex, pairIndex)] = winner
+      validWinners[pairKey(ringIndex, pairIndex)] = winner;
 
-      const nextRing = NEXT_RING[ringIndex]
+      const nextRing = NEXT_RING[ringIndex];
       if (nextRing !== null) {
-        slots[slotKey(nextRing, pairIndex)] = winner
+        slots[slotKey(nextRing, pairIndex)] = winner;
       }
     }
   }
 
-  return validWinners
+  return validWinners;
 }
 
 export function selectPairWinner(
-  positions: DrawPosition[],
-  pairWinners: Record<string, Team>,
+  positions: DrawPosition[] | null,
+  pairWinners: Record<string, Team> | null,
   ringIndex: PlayableRing,
   pairIndex: number,
   team: Team,
@@ -160,9 +165,9 @@ export function selectPairWinner(
   const updated = {
     ...pairWinners,
     [pairKey(ringIndex, pairIndex)]: team,
-  }
+  };
 
-  return prunePairWinners(positions, updated)
+  return prunePairWinners(positions, updated);
 }
 
 export function canSelectPair(
@@ -171,16 +176,16 @@ export function canSelectPair(
   slotTeams: Record<string, Team>,
   blockedSlots: ReadonlySet<string> = new Set(),
 ): boolean {
-  const [slotA, slotB] = getPairIndices(ringIndex, pairIndex)
-  const keyA = slotKey(ringIndex, slotA)
-  const keyB = slotKey(ringIndex, slotB)
+  const [slotA, slotB] = getPairIndices(ringIndex, pairIndex);
+  const keyA = slotKey(ringIndex, slotA);
+  const keyB = slotKey(ringIndex, slotB);
 
   return Boolean(
     slotTeams[keyA] &&
     slotTeams[keyB] &&
     !blockedSlots.has(keyA) &&
     !blockedSlots.has(keyB),
-  )
+  );
 }
 
 export function getPairWinner(
@@ -188,7 +193,7 @@ export function getPairWinner(
   pairIndex: number,
   pairWinners: Record<string, Team>,
 ): Team | null {
-  return pairWinners[pairKey(ringIndex, pairIndex)] ?? null
+  return pairWinners[pairKey(ringIndex, pairIndex)] ?? null;
 }
 
 export function getTeamState(
@@ -196,18 +201,18 @@ export function getTeamState(
   slotIndex: number,
   slotTeams: Record<string, Team>,
   pairWinners: Record<string, Team>,
-): 'idle' | 'winner' | 'eliminated' {
-  const pairIndex = getPairIndex(slotIndex)
-  const winner = getPairWinner(ringIndex, pairIndex, pairWinners)
+): "idle" | "winner" | "eliminated" {
+  const pairIndex = getPairIndex(slotIndex);
+  const winner = getPairWinner(ringIndex, pairIndex, pairWinners);
 
   if (!winner) {
-    return 'idle'
+    return "idle";
   }
 
-  const team = slotTeams[slotKey(ringIndex, slotIndex)]
+  const team = slotTeams[slotKey(ringIndex, slotIndex)];
   if (!team) {
-    return 'idle'
+    return "idle";
   }
 
-  return team.isoCode === winner.isoCode ? 'winner' : 'eliminated'
+  return team.isoCode === winner.isoCode ? "winner" : "eliminated";
 }
