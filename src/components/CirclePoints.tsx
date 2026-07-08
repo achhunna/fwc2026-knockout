@@ -40,6 +40,8 @@ type CirclePointsProps = {
   positions: DrawPosition[] | null;
   pairWinners: Record<string, Team>;
   beatByScores?: Record<string, string>;
+  championshipWinner: Team | null;
+  confettiKey: number;
   onPairWinnersChange: (pairWinners: Record<string, Team>) => void;
   onMoveCreated: (move: AdvanceMove) => void;
   reverseMove?: AdvancingTeam | null;
@@ -322,6 +324,8 @@ export function CirclePoints({
   positions,
   pairWinners,
   beatByScores = {},
+  championshipWinner,
+  confettiKey,
   onPairWinnersChange,
   onMoveCreated,
   reverseMove,
@@ -333,6 +337,19 @@ export function CirclePoints({
   const [travelPositions, setTravelPositions] = useState<
     Record<string, PathPoint>
   >({});
+  const confettiPieces = useMemo(
+    () =>
+      Array.from({ length: 28 }, (_, index) => ({
+        id: `${confettiKey}-${index}`,
+        left: 8 + ((index * 13) % 84),
+        delay: (index % 8) * 0.035,
+        duration: 1.8 + (index % 5) * 0.15,
+        drift: ((index % 7) - 3) * 14,
+        spin: 180 + index * 23,
+        hue: (index * 37) % 360,
+      })),
+    [confettiKey],
+  );
   const slotTeams = useMemo(
     () => deriveSlotTeams(positions, pairWinners),
     [positions, pairWinners],
@@ -820,6 +837,11 @@ export function CirclePoints({
           );
         })}
       </svg>
+      {championshipWinner ? (
+        <div className="circle-points__champion" aria-live="polite">
+          {`Winner: ${championshipWinner.name}`}
+        </div>
+      ) : null}
       <div className="circle-points__trophy" aria-hidden="true">
         <picture>
           <source
@@ -829,6 +851,24 @@ export function CirclePoints({
           <img src="/img/trophy-lm.png" alt="" />
         </picture>
       </div>
+      {championshipWinner ? (
+        <div className="circle-points__confetti-layer" aria-hidden="true">
+          {confettiPieces.map((piece) => (
+            <span
+              key={piece.id}
+              className="circle-points__confetti"
+              style={{
+                left: `${piece.left}%`,
+                animationDelay: `${piece.delay}s`,
+                animationDuration: `${piece.duration}s`,
+                "--confetti-drift": `${piece.drift}px`,
+                "--confetti-spin": `${piece.spin}deg`,
+                "--confetti-hue": `${piece.hue}`,
+              } as CSSProperties}
+            />
+          ))}
+        </div>
+      ) : null}
       {rings.map((ring) => (
         <div key={ring.ringIndex} className={getRingClassName(ring.ringIndex)}>
           {ring.points.map((point, slotIndex) =>
