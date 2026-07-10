@@ -7,7 +7,7 @@ type TeamRecord = {
 };
 
 type GameRecord = {
-  type: string;
+  type: "group" | "r32" | "r16" | "qf" | "sf" | "third" | "final";
   home_score: string;
   away_score: string;
   home_team_name_en: string;
@@ -23,6 +23,7 @@ type GameRecord = {
 const WORLD_CUP_26_BASE_PATH = "https://worldcup26.ir";
 
 const TYPE_TO_RING_INDEX: Record<string, number> = {
+  r32: 0,
   r16: 2,
   qf: 3,
   sf: 4,
@@ -120,7 +121,6 @@ export async function fetchLiveDrawState(): Promise<{
   const winners: Record<string, string> = {};
   const beatByScores: Record<string, string> = {};
   const positions: DrawPosition[] = [];
-  let r32PairIndex = 0;
 
   function getGameScore(game: GameRecord): string | null {
     const homeScore = Number(game.home_score);
@@ -144,63 +144,66 @@ export async function fetchLiveDrawState(): Promise<{
     return baseScore;
   }
 
-  for (const [type, ringIndex] of Object.entries(TYPE_TO_RING_INDEX)) {
-    const games = gamesData.games.filter((game) => game.type === type);
+  // generate positions list by recursively iterating on source home and away teams starting with type==="final"
+  const finalGameIndex = gamesData.games.findIndex(
+    ({ type }) => type === "final",
+  );
 
-    games.forEach((game, pairIndex) => {
-      if (type === "r16") {
-        const homeTeamId = game.home_team_label.substring(13);
-        const awayTeamId = game.away_team_label.substring(13);
-        const homeTeam = gamesData.games.find(({ id }) => id === homeTeamId);
-        const awayTeam = gamesData.games.find(({ id }) => id === awayTeamId);
-        const orderedTeams = [
-          ...getTeamFromGame(homeTeam, teamsMap),
-          ...getTeamFromGame(awayTeam, teamsMap),
-        ];
+  let pairIndex = 0;
 
-        orderedTeams.forEach((team) => {
-          const position = positions.length;
-          positions.push({
-            position,
-            pair: pairIndex + 1,
-            isoCode: team.isoCode,
-            team: team.team,
-          });
-        });
+  const leafWalk = (index: number) => {
+    if (index < 0) {
+      return;
+    }
 
-        const homeSourceWinner = getWinnerIsoCode(homeTeam ?? game, teamsMap);
-        if (homeSourceWinner) {
-          winners[`0-pair-${r32PairIndex}`] = homeSourceWinner;
-          const score = getGameScore(homeTeam ?? game);
-          if (score) {
-            beatByScores[`0-pair-${r32PairIndex}`] = score;
-          }
-        }
-        r32PairIndex += 1;
+    const game = gamesData.games[index];
+    const homeTeamId = game.home_team_label.substring(13);
+    const awayTeamId = game.away_team_label.substring(13);
+    const homeTeamIndex = gamesData.games.findIndex(
+      ({ id }) => id === homeTeamId,
+    );
+    const awayTeamIndex = gamesData.games.findIndex(
+      ({ id }) => id === awayTeamId,
+    );
+    const winnerIsoCode = getWinnerIsoCode(game, teamsMap);
+    const score = getGameScore(game);
 
-        const awaySourceWinner = getWinnerIsoCode(awayTeam ?? game, teamsMap);
-        if (awaySourceWinner) {
-          winners[`0-pair-${r32PairIndex}`] = awaySourceWinner;
-          const score = getGameScore(awayTeam ?? game);
-          if (score) {
-            beatByScores[`0-pair-${r32PairIndex}`] = score;
-          }
-        }
-        r32PairIndex += 1;
+    const ringIndex = TYPE_TO_RING_INDEX[game.type];
+    // index for each ring, which increments by 2 ^ ring
+    const bracketPairIndex =
+      ringIndex > 0 ? pairIndex / Math.pow(2, ringIndex - 1) : pairIndex;
+
+    if (ringIndex !== undefined && pairIndex !== undefined) {
+      if (winnerIsoCode) {
+        winners[`${ringIndex}-pair-${bracketPairIndex}`] = winnerIsoCode;
       }
 
-      const winnerIsoCode = getWinnerIsoCode(game, teamsMap);
-      if (!winnerIsoCode) {
-        return;
-      }
-
-      winners[`${ringIndex}-pair-${pairIndex}`] = winnerIsoCode;
-      const score = getGameScore(game);
       if (score) {
-        beatByScores[`${ringIndex}-pair-${pairIndex}`] = score;
+        beatByScores[`${ringIndex}-pair-${bracketPairIndex}`] = score;
       }
-    });
-  }
+    }
+
+    if (homeTeamIndex < 0 && awayTeamIndex < 0) {
+      const teams = getTeamFromGame(game, teamsMap);
+
+      teams.forEach((team) => {
+        positions.push({
+          position: positions.length,
+          pair: pairIndex,
+          isoCode: team.isoCode,
+          team: team.team,
+        });
+      });
+      pairIndex++;
+
+      return;
+    }
+
+    leafWalk(homeTeamIndex);
+    leafWalk(awayTeamIndex);
+  };
+
+  leafWalk(finalGameIndex);
 
   return {
     state: { v: 1, winners },
