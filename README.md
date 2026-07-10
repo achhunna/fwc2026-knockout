@@ -1,33 +1,30 @@
 # FWC26 Circle Draw
 
-## add-tooltip-goals
+FWC26 Circle Draw is an interactive knockout bracket viewer for the World Cup 2026 tournament. It renders the draw as concentric circles, lets you advance winners through each round, and shows completed-match scores for eliminated teams.
 
-Added score-aware tooltips for completed matches and a championship winner celebration in the bracket UI.
+## What the app does
 
-### Changes
+- Displays the knockout bracket as a circular layout.
+- Lets a winner be selected for each playable pairing.
+- Advances selected teams into later rounds when the chosen team matches one of the two teams in the pair.
+- Shows completed-match scores in the UI for teams that have already been eliminated.
+- Celebrates the championship winner once the final is settled.
 
-- Built a `beatByScores` map from live game data so eliminated teams can show the actual completed match score in their tooltip.
-- Displayed the championship winner name above the trophy as `Winner: <team name>` once the final is settled.
-- Added a confetti burst animation when the championship winner is selected.
-- Kept the live World Cup 2026 API integration and bracket seeding flow intact.
+## Live data
 
-### Branch Notes
+The app can build bracket state from the live World Cup 2026 data source at `https://worldcup26.ir`:
 
-- The tooltip score format supports penalties for drawn knockout games, for example `(0-0)PK:4-3`.
-- Confetti is driven from the final bracket selection state and resets with the draw.
+- Team data is loaded from `/get/teams`.
+- Game data is loaded from `/get/games`.
+- Bracket winners are derived from finished matches using the reported scores.
+- Score labels include penalty shootout results when available, for example `(0-0)PK:4-3`.
 
-## add-worldcup26-api
+## Supported rounds
 
-Integrated the live World Cup 2026 API into the knockout draw so bracket seeding and winner state are derived from current match data instead of a hardcoded default.
+- `r32`
+- `r16`
+- `qf`
+- `sf`
+- `final`
 
-### Changes
-
-- Added live fetches for team and game data from `https://worldcup26.ir/get/teams` and `https://worldcup26.ir/get/games`.
-- Built the initial draw state from API results by comparing `home_score` and `away_score` across supported match types.
-- Kept draw-tree validation aligned with the existing bracket structure so winner states continue to resolve correctly.
-- Refined the `r16` position seeding flow so it matches the live ordering used by the bracket renderer.
-
-### Scope
-
-- Supported match types: `r32`, `r16`, `qf`, `sf`, and `final`.
-- The third-place match remains outside the current bracket tree.
+The third-place match is not part of the current bracket tree.
